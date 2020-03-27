@@ -1,0 +1,79 @@
+LINES	equ	80
+
+scr	equ	$3200
+
+src	equ	$80
+dest	equ	$82
+px	equ	$84
+py	equ	$85
+
+	org	$2800
+main
+	mwa	#trace	src
+:3	jsr	draw
+
+	lda	20
+	cmp:rne	20
+	mva	#$21	$22f
+	mwa	#dl	$230
+	jmp	*
+
+draw
+	mva	(src),0	px
+	inw	src
+	mva	(src),y	py
+draw_loop
+	inw	src
+	jsr	plot
+	lda	(src),0
+	bmi	draw_ret
+	and	#3
+	sub	#1
+	add:sta	px
+	lda	(src),y
+:2	lsr	@
+	sub	#1
+	add:sta	py
+	jmp	draw_loop
+draw_ret
+	inw	src
+	rts
+
+plot
+; yyy yyyyxxxx xxx
+	mva	px	dest
+	and	#7
+	tax
+	asl	dest
+	lda	py
+	lsr	@
+	ror	dest
+	lsr	@
+	ror	dest
+	lsr	@
+	ror	dest
+	lsr	@
+	ror	dest
+	and	#7
+	add	>scr
+	sta	dest+1
+	lda	masks,x
+	ora:sta	(dest),y
+	rts
+
+dl
+:3	dta	$70
+	dta	$4b,a(scr)
+:LINES-1	dta	$b
+	dta	$41,a(dl)
+	ert	[*^dl]&$fc00
+
+	ert	*>scr
+
+masks
+:8	dta	$80>>#
+
+trace
+	icl	'trace.asx'
+
+	run	main
