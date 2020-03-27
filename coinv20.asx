@@ -1,3 +1,4 @@
+TEMPO	equ	10
 LINES	equ	80
 
 scr	equ	$3200
@@ -10,12 +11,10 @@ py	equ	$85
 	org	$2800
 main
 	mwa	#trace	src
-:3	jsr	draw
-
-	lda	20
-	cmp:rne	20
+	jsr	w1
 	mva	#$21	$22f
 	mwa	#dl	$230
+:3	jsr	draw
 	jmp	*
 
 draw
@@ -24,6 +23,8 @@ draw
 	mva	(src),y	py
 draw_loop
 	inw	src
+	lda	#TEMPO
+	jsr	w8
 	jsr	plot
 	lda	(src),0
 	bmi	draw_ret
@@ -59,6 +60,13 @@ plot
 	sta	dest+1
 	lda	masks,x
 	ora:sta	(dest),y
+	rts
+
+w1
+	lda	#1
+w8
+	add	20
+	cmp:rne	20
 	rts
 
 dl
