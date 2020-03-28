@@ -324,10 +324,10 @@ silly_scroll_end
 
 end_scroll
 	dta	d'                                           '
-	dta	d'You have been watching       '
-	dta	d'COINV-20       '
+	dta	d'You have been watching         '
+	dta	d'COINV-20          '
 	dta	d'Combined invitation for Lost Party and Silly Venture                '
-	dta	d'AtariArea 24h compo entry         '
+	dta	d'Atari Area 24h compo entry         '
 	dta	d'www.atari.org.pl     '
 	dta	d'                                           '
 	dta	d'Idea and code by 0xF/Taquart        '
