@@ -11,10 +11,20 @@ py	equ	$85
 
 	org	$2800
 main
-	mwa	#trace	src
+	lda:tay	#0
+	sta	dest
+	ldx	>scr
+cls_page
+	stx	dest+1
+	sta:rne	(dest),y+
+	inx
+	cpx	>scr+LINES*32
+	bcc	cls_page
+
 	jsr	w1
 	mva	#$21	$22f
 	mwa	#dl	$230
+	mwa	#trace	src
 :3	jsr	draw
 
 rainbow_loop
