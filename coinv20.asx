@@ -26,6 +26,10 @@ cls_page
 	jsr	w1
 	mva	#$21	$22f
 	mwa	#dl	$230
+	mva	#$76	$2c4
+	mva	#$0c	$2c5
+	mva	#0	$2c6
+	sta	$2c8
 	mwa	#trace	src
 :3	jsr	draw
 
