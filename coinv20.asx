@@ -27,15 +27,13 @@ cls_page
 	jsr	w1
 	mva	#$21	$22f
 	mwa	#dl	$230
-	mva	#$76	$2c4
-	mva	#$0c	$2c5
-	mva	#0	$2c6
-	sta	$2c8
+	ldx	#4
+	mva:rpl	colors,x	$2c4,x-
 	mwa	#trace	src
 :3	jsr	draw
 
 rainbow_loop
-	lda	#15
+	lda	#11
 	cmp:rne	^4b
 	ldy	#LINES*2+4
 	ldx	20
@@ -60,6 +58,7 @@ draw_loop
 	jsr	w8
 	jsr	plot
 	jsr	print_counter
+	jsr	tomorrow
 	lda	(src),0
 	bmi	draw_ret
 	and	#3
@@ -179,6 +178,39 @@ print_space
 	sta	counter_str,y+
 	rts
 
+tomorrow
+	lda	month_str
+	cmp	#'1'+$a0
+	lda	month_str+1
+	scc:adc	#9
+	tax
+	lda	day_str
+:4	asl	@
+	add	day_str+1
+	cmp	last_days-$d1,x
+	bne	same_month
+	lda	month_str+1
+	cmp	#'9'+$a0
+	bcc	month_1
+	inc	month_str
+	lda	#'0'+$a0-1
+month_1
+	add	#1
+	sta	month_str+1
+	lda	#'0'+$a0
+	sta	day_str
+	bne	tomorrow_1	; jmp
+same_month
+	lda	day_str+1
+	cmp	#'9'+$a0
+	bcc	tomorrow_1
+	inc	day_str
+	lda	#'0'+$a0-1
+tomorrow_1
+	add	#1
+	sta	day_str+1
+	rts
+
 w1
 	lda	#1
 w8
@@ -187,20 +219,53 @@ w8
 	rts
 
 dl
-:3	dta	$70
+	dta	$70,$70
 	dta	$4b,a(scr)
 :LINES-1	dta	$b
+	dta	$70
+	dta	$46,a(date)
 	dta	$70
 	dta	$42,a(scroll)
 	dta	$41,a(dl)
 
+date
+	dta	d'date'*,':'+$a0,' '+$a0,'2'+$a0,'0'+$a0,'2'+$a0,'0'+$a0,'-'+$a0
+month_str
+	dta	'0'+$a0,'1'+$a0,'-'+$a0
+day_str
+	dta	'2'+$a0,'2'+$a0
+	dta	d'   lost party   '*
+	dta	d'  silly venture '*
 scroll
 	dta	d'Total Coronavirus Cases:'
 counter_str
 	dta	d'        '
+	dta	d'                                           '
+	dta	d'Vasco invites you to:   '
+	dta	d'Lost Party      '
+	dta	d'www.lostparty.pl/2020/     '
+	dta	d'                                           '
+	dta	d'Grey invites you to:    '
+	dta	d'Silly Venture      '
+	dta	d'sillyventure.eu     '
+
+	dta	d'You have been watching   '
+	dta	d'COINV-20   '
+	dta	d'Idea and code by 0xF/Taquart      '
+	dta	d'Music by X-Ray/Taquart     '
+
+	dta	d'AtariArea 24h compo entry    '
+	dta	d'http://www.atari.org.pl     '
+	dta	d'                                           '
 	ert	[*^dl]&$fc00
 
 	ert	*>scr
+
+last_days
+	dta	l($d0+$31,$d0+$29,$d0+$31,$d0+$30)
+	dta	l($d0+$30,$d0+$31,$d0+$30,$d0+$31)
+	dta	l($d0+$31,$d0+$30,$d0+$31,$d0+$30)
+	dta	l($d0+$31,$d0+$30,$d0+$31,$d0+$30)
 
 masks
 :8	dta	[[$ff>>BRUSHW]^$ff]>>#
@@ -208,6 +273,9 @@ masks
 masks_right
 	dta	$80,$c0
 	eif
+
+colors
+	dta	$76,$0c,$00,$54,$00
 
 trace
 	icl	'trace.asx'
