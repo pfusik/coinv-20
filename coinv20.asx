@@ -16,7 +16,22 @@ main
 	mva	#$21	$22f
 	mwa	#dl	$230
 :3	jsr	draw
-	jmp	*
+
+rainbow_loop
+	lda	#15
+	cmp:rne	^4b
+	ldy	#LINES*2+4
+	ldx	20
+rainbow_line
+	txa
+	cmp	#$10
+	scs:ora	#$10	; no grey
+	sta	^4a
+	sta	^16
+	inx
+	dey
+	bne	rainbow_line
+	jmp	rainbow_loop
 
 draw
 	mva	(src),0	px
