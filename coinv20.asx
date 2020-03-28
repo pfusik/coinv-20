@@ -8,6 +8,8 @@ src	equ	$80
 dest	equ	$82
 px	equ	$84
 py	equ	$85
+counter	equ	$90
+counter_bcd	equ	$94
 
 	org	$2800
 main
@@ -52,6 +54,7 @@ draw_loop
 	lda	#TEMPO
 	jsr	w8
 	jsr	plot
+	jsr	print_counter
 	lda	(src),0
 	bmi	draw_ret
 	and	#3
@@ -103,6 +106,65 @@ plot_ret
 	eif
 	rts
 
+print_counter
+	mva	px	counter+1
+	lda	#LINES
+	sub	py
+	lsr	@
+	ror	counter+1
+	lsr	@
+	ror	counter+1
+	sta	counter+2
+
+	mva	#0	counter
+	sta	counter_bcd
+	sta	counter_bcd+1
+	sta	counter_bcd+2
+	sta	counter_bcd+3
+
+	sed
+	ldx	#24
+counter_to_bcd
+	asl	counter
+	rol	counter+1
+	rol	counter+2
+	lda	counter_bcd
+	adc:sta	counter_bcd
+	lda	counter_bcd+1
+	adc:sta	counter_bcd+1
+	lda	counter_bcd+2
+	adc:sta	counter_bcd+2
+	lda	counter_bcd+3
+	adc:sta	counter_bcd+3
+	dex
+	bne	counter_to_bcd
+	cld
+
+	ldx	#3
+	ldy	#0
+print_counter_out
+	lda	counter_bcd,x
+:4	lsr	@
+	jsr	print_digit
+	lda	counter_bcd,x
+	and	#$f
+	jsr	print_digit
+	dex
+	bpl	print_counter_out
+	rts
+
+print_digit
+	bne	print_nonzero
+	cmp	counter_str-1,y
+	beq	print_space
+	cpy	#0
+	beq	print_space
+print_nonzero
+	ora	#'0'-$20
+print_space
+	sta	counter_str,y+
+	rts
+
 w1
 	lda	#1
 w8
@@ -114,7 +176,14 @@ dl
 :3	dta	$70
 	dta	$4b,a(scr)
 :LINES-1	dta	$b
+	dta	$70
+	dta	$42,a(scroll)
 	dta	$41,a(dl)
+
+scroll
+	dta	d'Total Coronavirus Cases:'
+counter_str
+	dta	d'        '
 	ert	[*^dl]&$fc00
 
 	ert	*>scr
