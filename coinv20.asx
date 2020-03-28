@@ -1,5 +1,6 @@
 TEMPO	equ	10
 LINES	equ	80
+BRUSHW	equ	3
 
 scr	equ	$3200
 
@@ -60,6 +61,21 @@ plot
 	sta	dest+1
 	lda	masks,x
 	ora:sta	(dest),y
+	ift	BRUSHW==2
+	cpx	#7
+	bcc	plot_ret
+	iny
+	lda	#$80
+	ora:sta	(dest),y
+plot_ret
+	eli	BRUSHW==3
+	cpx	#6
+	bcc	plot_ret
+	iny
+	lda	masks_right-6,x
+	ora:sta	(dest),y
+plot_ret
+	eif
 	rts
 
 w1
@@ -79,7 +95,11 @@ dl
 	ert	*>scr
 
 masks
-:8	dta	$80>>#
+:8	dta	[[$ff>>BRUSHW]^$ff]>>#
+	ift	BRUSHW==3
+masks_right
+	dta	$80,$c0
+	eif
 
 trace
 	icl	'trace.asx'
