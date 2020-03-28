@@ -2,6 +2,7 @@ TEMPO	equ	10
 LINES	equ	80
 BRUSHW	equ	3
 BRUSHH	equ	2
+DATE_COLOR	equ	$54
 
 scr	equ	$3200
 
@@ -30,9 +31,27 @@ cls_page
 	ldx	#4
 	mva:rpl	colors,x	$2c4,x-
 	mwa	#trace	src
-:3	jsr	draw
+	jsr	draw
+	jsr	draw
+	jsr	lost
+	jsr	draw
+	mwa	#silly_banner	dl_banner+1
+	mva	#$52	dl_scroll
+	mwa	#silly_scroll	dl_scroll+1
+scroll_silly
+	jsr	blink_banner
+	jsr	do_scroll
+	cpx	<silly_scroll_end
+	sbc	>silly_scroll_end
+	bcc	scroll_silly
 
+	mwa	#end_banner	dl_banner+1
 rainbow_loop
+	jsr	blink_banner
+	jsr	do_scroll
+	cpx	<end_scroll_end
+	sbc	>end_scroll_end
+	scc:mwa	#end_scroll	dl_scroll+1
 	lda	#11
 	cmp:rne	^4b
 	ldy	#LINES*2+4
@@ -211,6 +230,45 @@ tomorrow_1
 	sta	day_str+1
 	rts
 
+lost
+	mwa	#lost_banner	dl_banner+1
+	mva	#$52	dl_scroll
+	mwa	#lost_scroll	dl_scroll+1
+scroll_lost
+	lda	20
+	and	#$f0
+	eor	#6
+	sta	$2c7
+	jsr	do_scroll
+	cpx	<lost_scroll_end
+	sbc	>lost_scroll_end
+	bcc	scroll_lost
+	mva	#DATE_COLOR	$2c7
+	mwa	#date	dl_banner+1
+	mva	#$42	dl_scroll
+	mwa	#cases	dl_scroll+1
+	rts
+
+do_scroll
+	lda	20
+	and	#3
+	sne:inw	dl_scroll+1
+	eor	#$f
+	sta	^44
+	jsr	w1
+	ldx	dl_scroll+1
+	lda	dl_scroll+2
+	rts
+
+blink_banner
+	lda	20
+	lsr	@
+	and	#$1f
+	cmp	#$10
+	scc:eor	#$1f
+	sta	$2c7
+	rts
+
 w1
 	lda	#1
 w8
@@ -223,10 +281,13 @@ dl
 	dta	$4b,a(scr)
 :LINES-1	dta	$b
 	dta	$70
+dl_banner
 	dta	$46,a(date)
 	dta	$70
-	dta	$42,a(scroll)
+dl_scroll
+	dta	$42,a(cases)
 	dta	$41,a(dl)
+	ert	[*^dl]&$fc00
 
 date
 	dta	d'date'*,':'+$a0,' '+$a0,'2'+$a0,'0'+$a0,'2'+$a0,'0'+$a0,'-'+$a0
@@ -234,30 +295,49 @@ month_str
 	dta	'0'+$a0,'1'+$a0,'-'+$a0
 day_str
 	dta	'2'+$a0,'2'+$a0
+lost_banner
 	dta	d'   lost party   '*
+silly_banner
 	dta	d'  silly venture '*
-scroll
+end_banner
+	dta	d'    coinv'*,'-'+$a0,'2'+$a0,'0'+$a0,d'    '*
+cases
 	dta	d'Total Coronavirus Cases:'
 counter_str
 	dta	d'        '
+
+lost_scroll
 	dta	d'                                           '
-	dta	d'Vasco invites you to:   '
-	dta	d'Lost Party      '
-	dta	d'www.lostparty.pl/2020/     '
+	dta	d'On July 9-12 '
+	dta	d'Vasco invites you to:         '
+	dta	d'Lost Party                   '
+	dta	d'www.lostparty.pl/2020     '
+lost_scroll_end
+
+silly_scroll
 	dta	d'                                           '
-	dta	d'Grey invites you to:    '
-	dta	d'Silly Venture      '
+	dta	d'On December 3-6 '
+	dta	d'Grey invites you to:          '
+	dta	d'Silly Venture                   '
 	dta	d'sillyventure.eu     '
+silly_scroll_end
 
-	dta	d'You have been watching   '
-	dta	d'COINV-20   '
-	dta	d'Idea and code by 0xF/Taquart      '
-	dta	d'Music by X-Ray/Taquart     '
-
-	dta	d'AtariArea 24h compo entry    '
-	dta	d'http://www.atari.org.pl     '
+end_scroll
 	dta	d'                                           '
-	ert	[*^dl]&$fc00
+	dta	d'You have been watching       '
+	dta	d'COINV-20       '
+	dta	d'Combined invitation for Lost Party and Silly Venture                '
+	dta	d'AtariArea 24h compo entry         '
+	dta	d'www.atari.org.pl     '
+	dta	d'                                           '
+	dta	d'Idea and code by 0xF/Taquart        '
+	dta	d'Music by X-Ray/Taquart     '
+	dta	d'                                           '
+	dta	d'Stay safe                      '
+	dta	d'Stay on Atari                  '
+end_scroll_end
+	dta	d'                                           '
+	ert	[*^date]&$f000
 
 	ert	*>scr
 
@@ -275,7 +355,7 @@ masks_right
 	eif
 
 colors
-	dta	$76,$0c,$00,$54,$00
+	dta	$76,$0c,$00,DATE_COLOR,$00
 
 trace
 	icl	'trace.asx'
