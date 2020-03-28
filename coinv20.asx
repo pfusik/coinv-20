@@ -1,6 +1,7 @@
 TEMPO	equ	10
 LINES	equ	80
 BRUSHW	equ	3
+BRUSHH	equ	2
 
 scr	equ	$3200
 
@@ -91,22 +92,31 @@ plot
 	and	#7
 	add	>scr
 	sta	dest+1
+	ldy	#0
+plot_line
 	lda	masks,x
 	ora:sta	(dest),y
 	ift	BRUSHW==2
 	cpx	#7
-	bcc	plot_ret
+	bcc	plot_next_line
 	iny
 	lda	#$80
 	ora:sta	(dest),y
-plot_ret
 	eli	BRUSHW==3
 	cpx	#6
-	bcc	plot_ret
+	bcc	plot_next_line
 	iny
 	lda	masks_right-6,x
 	ora:sta	(dest),y
-plot_ret
+	eif
+plot_next_line
+	ift	BRUSHH
+	tya
+	and	#$f0
+	add	#16
+	tay
+	cmp	#BRUSHH*16
+	bcc	plot_line
 	eif
 	rts
 
