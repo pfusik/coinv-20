@@ -1,10 +1,14 @@
-TEMPO	equ	10
+lenpat	equ	$40	; at offset 0x01ce in the MPT file
+speed	equ	$08	; at offset 0x01cf in the MPT file
+STEREO	equ	1
+
+DAY_TEMPO	equ	40
 LINES	equ	80
 BRUSHW	equ	3
 BRUSHH	equ	2
 DATE_COLOR	equ	$54
 
-scr	equ	$3200
+scr	equ	$3600
 
 src	equ	$80
 dest	equ	$82
@@ -12,9 +16,18 @@ px	equ	$84
 py	equ	$85
 counter	equ	$90
 counter_bcd	equ	$94
+zp	equ $a0 	; 12 bytes on page 0
 
-	org	$2800
+	org	$2200
+msx
+	ins	'covid19.mpt',6
+:400	dta	0	; TODO
+
 main
+	lda	#3
+:STEREO	sta	$d21f
+	sta	$d20f
+
 	lda:tay	#0
 	sta	dest
 	ldx	>scr
@@ -25,7 +38,7 @@ cls_page
 	cpx	>scr+LINES*32
 	bcc	cls_page
 
-	jsr	w1
+	jsr	frame
 	mva	#$21	$22f
 	mwa	#dl	$230
 	ldx	#4
@@ -73,7 +86,7 @@ draw
 	mva	(src),y	py
 draw_loop
 	inw	src
-	lda	#TEMPO
+	lda	#DAY_TEMPO
 	jsr	w8
 	jsr	plot
 	jsr	print_counter
@@ -255,7 +268,7 @@ do_scroll
 	sne:inw	dl_scroll+1
 	eor	#$f
 	sta	^44
-	jsr	w1
+	jsr	frame
 	ldx	dl_scroll+1
 	lda	dl_scroll+2
 	rts
@@ -269,12 +282,20 @@ blink_banner
 	sta	$2c7
 	rts
 
-w1
-	lda	#1
 w8
-	add	20
-	cmp:rne	20
+	pha
+	jsr	frame
+	pla
+	sub	#1
+	bne	w8
 	rts
+
+frame
+	lda	20
+	cmp:req	20
+
+player
+	icl	'mptplfox.asx'
 
 dl
 	dta	$70,$70
@@ -309,7 +330,7 @@ counter_str
 lost_scroll
 	dta	d'                                           '
 	dta	d'On July 9-12 '
-	dta	d'Vasco invites you to:         '
+	dta	d'Vasco invites you to         '
 	dta	d'Lost Party                   '
 	dta	d'www.lostparty.pl/2020     '
 lost_scroll_end
@@ -317,7 +338,7 @@ lost_scroll_end
 silly_scroll
 	dta	d'                                           '
 	dta	d'On December 3-6 '
-	dta	d'Grey invites you to:          '
+	dta	d'Grey invites you to          '
 	dta	d'Silly Venture                   '
 	dta	d'sillyventure.eu     '
 silly_scroll_end
@@ -326,12 +347,12 @@ end_scroll
 	dta	d'                                           '
 	dta	d'You have been watching         '
 	dta	d'COINV-20          '
-	dta	d'Combined invitation for Lost Party and Silly Venture                '
+	dta	d'Combined invitation for Lost Party 2020 and Silly Venture 2020                '
 	dta	d'Atari Area 24h compo entry         '
 	dta	d'www.atari.org.pl     '
 	dta	d'                                           '
-	dta	d'Idea and code by 0xF/Taquart        '
-	dta	d'Music by X-Ray/Taquart     '
+	dta	d'Idea and code by 0xF/Taquart <fox@scene.pl>        '
+	dta	d'Music by X-Ray/Taquart <xray@scene.pl>     '
 	dta	d'                                           '
 	dta	d'Stay safe                      '
 	dta	d'Stay on Atari                  '
