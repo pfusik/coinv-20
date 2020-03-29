@@ -2,7 +2,9 @@ lenpat	equ	$40	; at offset 0x01ce in the MPT file
 speed	equ	$08	; at offset 0x01cf in the MPT file
 STEREO	equ	1
 
-DAY_TEMPO	equ	40
+TEMPO1	equ	37
+TEMPO2	equ	10
+TEMPO3	equ	6
 LINES	equ	80
 BRUSHW	equ	3
 BRUSHH	equ	2
@@ -14,14 +16,15 @@ src	equ	$80
 dest	equ	$82
 px	equ	$84
 py	equ	$85
+day_tempo	equ	$86
 counter	equ	$90
 day	equ	$93
 counter_bcd	equ	$94
 zp	equ $a0 	; 12 bytes on page 0
 
-	org	$2200
+	org	$2000
 msx
-	ins	'covid19.mpt',6
+	ins	'coinv20.mpt',6
 
 main
 	lda	#3
@@ -45,9 +48,12 @@ cls_page
 	mva:rpl	colors,x	$2c4,x-
 	mwa	#trace	src
 	mva	#0	day
+	lda	#TEMPO1
 	jsr	draw
+	lda	#TEMPO2
 	jsr	draw
 	jsr	lost
+	lda	#TEMPO3
 	jsr	draw
 	mwa	#silly_banner	dl_banner+1
 	mva	#$52	dl_scroll
@@ -82,6 +88,7 @@ rainbow_line
 	jmp	rainbow_loop
 
 draw
+	sta	day_tempo
 	mva	(src),0	px
 	inw	src
 	mva	(src),y	py
@@ -90,7 +97,7 @@ draw_loop
 	jsr	plot
 	jsr	print_counter
 	jsr	tomorrow
-	lda	#DAY_TEMPO
+	lda	day_tempo
 	jsr	w8
 	lda	(src),0
 	bmi	draw_ret
@@ -348,7 +355,7 @@ counter_str
 
 lost_scroll
 	dta	d'                                           '
-	dta	d'On July 9-12 '
+	dta	d'On July 9 to 12 '
 	dta	d'Vasco invites you to         '
 	dta	d'Lost Party                   '
 	dta	d'www.lostparty.pl/2020     '
@@ -356,7 +363,7 @@ lost_scroll_end
 
 silly_scroll
 	dta	d'                                           '
-	dta	d'On December 3-6 '
+	dta	d'On December 3 to 6 '
 	dta	d'Grey invites you to          '
 	dta	d'Silly Venture                   '
 	dta	d'sillyventure.eu     '
@@ -364,13 +371,13 @@ silly_scroll_end
 
 end_scroll
 	dta	d'                                           '
-	dta	d'You have been watching         '
-	dta	d'COINV-20          '
+	dta	d'You have been watching              '
+	dta	d'COINV-20                   '
 	dta	d'Combined invitation for Lost Party 2020 and Silly Venture 2020                '
 	dta	d'Atari Area 24h compo entry         '
 	dta	d'www.atari.org.pl     '
 	dta	d'                                           '
-	dta	d'Idea and code by 0xF/Taquart <fox@scene.pl>        '
+	dta	d'Idea and code by 0xF/Taquart <fox@scene.pl>             '
 	dta	d'Music by X-Ray/Taquart <xray@scene.pl>     '
 	dta	d'                                           '
 	dta	d'Stay safe                      '
