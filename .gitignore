@@ -1,3 +1,5 @@
 *.xex
+*.obx
 *.lst
 trace.asx
+cases.asx

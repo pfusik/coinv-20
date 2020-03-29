@@ -15,13 +15,13 @@ dest	equ	$82
 px	equ	$84
 py	equ	$85
 counter	equ	$90
+day	equ	$93
 counter_bcd	equ	$94
 zp	equ $a0 	; 12 bytes on page 0
 
 	org	$2200
 msx
 	ins	'covid19.mpt',6
-:400	dta	0	; TODO
 
 main
 	lda	#3
@@ -44,6 +44,7 @@ cls_page
 	ldx	#4
 	mva:rpl	colors,x	$2c4,x-
 	mwa	#trace	src
+	mva	#0	day
 	jsr	draw
 	jsr	draw
 	jsr	lost
@@ -86,11 +87,11 @@ draw
 	mva	(src),y	py
 draw_loop
 	inw	src
-	lda	#DAY_TEMPO
-	jsr	w8
 	jsr	plot
 	jsr	print_counter
 	jsr	tomorrow
+	lda	#DAY_TEMPO
+	jsr	w8
 	lda	(src),0
 	bmi	draw_ret
 	and	#3
@@ -152,6 +153,17 @@ plot_next_line
 	rts
 
 print_counter
+	ldx	day
+	cpx	#cases_len
+	bcs	fake_data
+	inc	day
+	mva	cases0,x	counter_bcd
+	mva	cases1,x	counter_bcd+1
+	mva	cases2,x	counter_bcd+2
+	mva	#0	counter_bcd+3
+	beq	print_bcd	; jmp
+
+fake_data
 	mva	px	counter+1
 	lda	#LINES
 	sub	py
@@ -185,6 +197,7 @@ counter_to_bcd
 	bne	counter_to_bcd
 	cld
 
+print_bcd
 	ldx	#3
 	ldy	#0
 print_counter_out
@@ -297,6 +310,12 @@ frame
 player
 	icl	'mptplfox.asx'
 
+trace
+	icl	'trace.asx'
+
+	icl	'cases.asx'
+cases_len	equ	cases1-cases0
+
 dl
 	dta	$70,$70
 	dta	$4b,a(scr)
@@ -315,7 +334,7 @@ date
 month_str
 	dta	'0'+$a0,'1'+$a0,'-'+$a0
 day_str
-	dta	'2'+$a0,'2'+$a0
+	dta	'2'+$a0,'1'+$a0
 lost_banner
 	dta	d'   lost party   '*
 silly_banner
@@ -360,8 +379,6 @@ end_scroll_end
 	dta	d'                                           '
 	ert	[*^date]&$f000
 
-	ert	*>scr
-
 last_days
 	dta	l($d0+$31,$d0+$29,$d0+$31,$d0+$30)
 	dta	l($d0+$30,$d0+$31,$d0+$30,$d0+$31)
@@ -378,7 +395,6 @@ masks_right
 colors
 	dta	$76,$0c,$00,DATE_COLOR,$00
 
-trace
-	icl	'trace.asx'
+	ert	*>scr
 
 	run	main
